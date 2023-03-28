@@ -1,0 +1,85 @@
+library(shiny)
+library(ggplot2)
+
+# Read iris data
+iris_data <- read.csv("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv")
+
+# Define UI
+ui <- fluidPage(
+  titlePanel("Hello World!!"),
+  h1("Scatter Plot"),
+  p("Scatter plot of the iris dataset"), 
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput(inputId = "x_var",
+                  label = "X-axis Variable:",
+                  choices = c("sepal_length", "sepal_width", "petal_length", "petal_width"),
+                  selected = "sepal_length"),
+      
+      selectInput(inputId = "y_var",
+                  label = "Y-axis Variable:",
+                  choices = c("sepal_length", "sepal_width", "petal_length", "petal_width"),
+                  selected = "sepal_width"),
+      
+      selectInput(inputId = "color1", 
+                  label = "Scatter Color", 
+                  choices = c("Blue" = "#007bc2", "Orange" = "#ff7f0e", "Green" = "#2ca02c", "Red" = "#d62728"), 
+                  selected = "#007bc2"),
+      
+      selectInput(inputId = "color2", 
+                  label = "Scatter Color", 
+                  choices = c("Blue" = "#007bc2", "Orange" = "#ff7f0e", "Green" = "#2ca02c", "Red" = "#d62728"), 
+                  selected = "#007bc2"),
+      
+      selectInput(inputId = "species",
+                  label = "Species:",
+                  choices = unique(iris_data$species),
+                  selected = unique(iris_data$species)[1]),
+    
+      selectInput(inputId = "shape",
+                  label = "Shape:",
+                  choices = c("Circle" = 19, "Triangle" = 17, "Diamond" = 15),
+                  selected = 19),
+      
+      sliderInput(
+        inputId = "point_size",
+        label = "Point Size:",
+        min = 1,
+        max = 10,
+        value = 3
+      )
+    ),
+    
+    mainPanel(
+      plotOutput(outputId = "scatterPlot", height = "600px", width = "800")
+    )
+  )
+)
+
+# Define server
+server <- function(input, output) {
+  output$scatterPlot <- renderPlot({
+    x <- iris_data[[input$x_var]]
+    y <- iris_data[[input$y_var]]
+    
+    # Define colors
+    col1 <- ifelse(iris_data$species == input$species, input$color1, input$color2)
+    col2 <- ifelse(iris_data$species == input$species, NA, input$color2)
+    
+    # Define shapes
+    shapes <- ifelse(iris_data$species == input$species, input$shape, 1)
+    
+    # Plot scatter plot
+    ggplot(data = iris_data, aes(x = x, y = y, color = col1, shape = shapes)) + 
+      geom_point(size = input$point_size) +
+      scale_shape_identity() +
+      labs(title = paste("Scatter plot of", input$x_var, "vs", input$y_var),
+           x = input$x_var,
+           y = input$y_var) +
+      theme_bw()
+  })
+}
+
+# Create Shiny app
+shinyApp(ui = ui, server = server)
